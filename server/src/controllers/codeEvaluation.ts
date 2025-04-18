@@ -25,7 +25,7 @@ export const codeEvaluationController = async (req: Request, res: Response) => {
 
     const result = await evaluateCodeAndTranscript(question, code, transcript, history);
 
-    if (result.status) {
+    if (result.success) {
       const agentMessage = new AgentMessage({ content: result.content });
       history.push(userMessage, agentMessage);
       return res.json({ status: true, content: result.content });

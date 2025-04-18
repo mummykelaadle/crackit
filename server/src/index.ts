@@ -7,7 +7,6 @@ import cors from 'cors';
 import morgan from 'morgan';
 import connectDB from './config/db';
 import apiRoutes from './routes/api';
-import codeEval from './routes/';
 import codeEvalRoutes from './routes/evaluator';
 
 
