@@ -7,6 +7,8 @@ import cors from 'cors';
 import morgan from 'morgan';
 import connectDB from './config/db';
 import apiRoutes from './routes/api';
+import codeEval from './routes/';
+import codeEvalRoutes from './routes/evaluator';
 
 
 const app = express();
@@ -23,6 +25,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api', apiRoutes);
+app.use('/api/evaluator', codeEvalRoutes);
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
 });
