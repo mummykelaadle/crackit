@@ -1,12 +1,14 @@
-import { useState, useEffect } from "react"
-import { Button } from "./components/ui/button"
-import { Card } from "./components/ui/card"
-import CodeEditor from "./components/code-editor"
-import VideoFeeds from "./components/video-feeds"
-import QuestionDisplay from "./components/question-display"
-import CodeOutput from "./components/code-output"
+"use client"
 
-function App() {
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import CodeEditor from "@/components/code-editor"
+import VideoFeeds from "@/components/video-feeds"
+import QuestionDisplay from "@/components/question-display"
+import CodeOutput from "@/components/code-output"
+
+export default function InterviewPage() {
   const [question, setQuestion] = useState<{
     id: string
     title: string
@@ -110,7 +112,7 @@ function App() {
         <div className="flex flex-col gap-4">
           <Card className="p-4 bg-gray-800 border-gray-700 flex-grow">
             <h2 className="text-xl font-bold mb-4">Code Editor</h2>
-            <CodeEditor value={code} onChange={setCode} language="javascript" />
+            <CodeEditor value={code} onChange={setCode} language="javascript" height="100%" />
           </Card>
 
           <Card className="p-4 bg-gray-800 border-gray-700">
@@ -133,5 +135,3 @@ function App() {
     </div>
   )
 }
-
-export default App
