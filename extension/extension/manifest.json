@@ -1,0 +1,14 @@
+{
+    "manifest_version": 3,
+    "name": "GFG Interview Capture",
+    "version": "1.0",
+    "description": "Capture interview experience and send to backend",
+    "permissions": ["activeTab", "scripting"],
+    "content_scripts": [
+      {
+        "matches": ["https://www.geeksforgeeks.org/*interview-experience*"],
+        "js": ["content.js"]
+      }
+    ]
+  }
+  
