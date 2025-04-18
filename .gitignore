@@ -11,7 +11,11 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependency directories
 node_modules
+# Lock files
+pnpm-lock.yaml
+
 dist
 dist-ssr
 *.local
