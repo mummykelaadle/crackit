@@ -8,6 +8,7 @@ import morgan from 'morgan';
 import connectDB from './config/db';
 import apiRoutes from './routes/api';
 import codeEvalRoutes from './routes/evaluator';
+import resumeRoutes from './routes/resume';
 
 
 const app = express();
@@ -25,6 +26,7 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use('/api', apiRoutes);
 app.use('/api/evaluator', codeEvalRoutes);
+app.use('/api/resume', resumeRoutes);
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
 });
