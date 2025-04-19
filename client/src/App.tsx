@@ -1,4 +1,4 @@
-import React,{ useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "./components/ui/button"
 import { Card } from "./components/ui/card"
 import CodeEditor from "./components/code-editor"
@@ -6,6 +6,7 @@ import VideoFeeds from "./components/video-feeds"
 import QuestionDisplay from "./components/question-display"
 import CodeOutput from "./components/code-output"
 import AudioRecorder from "./components/audio-recorder"
+import ResumeDropzone from "./components/resume-dropzone"
 
 function App() {
   const [question, setQuestion] = useState<{
@@ -146,6 +147,13 @@ function App() {
       </div>
 
       <AudioRecorder />
+
+      {/* <div className="flex flex-col gap-4">
+        <Card className="p-4 bg-gray-800 border-gray-700">
+          <h2 className="text-xl font-bold mb-4">Resume Uploader</h2>
+          <ResumeDropzone onFileUpload={(file) => console.log('Uploaded file:', file)} />
+        </Card>
+      </div> */}
 
       <div className="flex justify-center h-[50px] mt-2">
         <Button variant="outline" className="border-red-500 text-red-500 hover:bg-red-900 hover:text-white">
