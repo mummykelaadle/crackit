@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './components/Home';
@@ -5,9 +6,9 @@ import ResumePage from './components/resumePage';
 import BehavioralPage from './components/BehavioralPage';
 import CodingPage from './components/codingPage';
 
-
 const App = () => {
   return (
+
     <Router>
       <Routes>
         <Route path="/" element={<Home />} />
@@ -20,3 +21,4 @@ const App = () => {
 };
 
 export default App;
+
