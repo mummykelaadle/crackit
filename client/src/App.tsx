@@ -15,7 +15,7 @@ function App() {
     examples: { input: string; output: string; explanation?: string }[]
     constraints: string[]
   } | null>(null)
-  const [code, setCode] = useState("// Write your code here\n\n")
+  const [code, setCode] = useState("# Write your code here\n\n")
   const [output, setOutput] = useState("")
   const [isRunning, setIsRunning] = useState(false)
 
@@ -61,35 +61,54 @@ function App() {
     setOutput("Running code...")
 
     try {
-      // In a real app, this would send the code to a backend for execution
-      // For demo purposes, we'll simulate execution with a timeout
-      setTimeout(() => {
-        try {
-          // This is a simplified execution environment
-          // In production, you would use a sandboxed environment
-          const userFunction = new Function(`
-            ${code}
-            
-            // Test with example input
-            const nums = [2, 7, 11, 15];
-            const target = 9;
-            return JSON.stringify(twoSum(nums, target));
-          `)
+      // Send the code to our backend API for execution
+      const response = await fetch("http://localhost:3000/api/execute", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          language: "python",  // Hardcoded as python for now
+          version: "3.10",     // Hardcoded version 3.11
+          content: code,
+          stdin: "",           // Empty stdin for now
+          args: []            // No command line args
+        }),
+      })
 
-          const result = userFunction()
-          setOutput(`Output: ${result}\n\nExpected: [0,1]`)
-        } catch (error) {
-          if (error instanceof Error) {
-            setOutput(`Error: ${error.message}`)
-          } else {
-            setOutput("An unknown error occurred")
-          }
-        } finally {
-          setIsRunning(false)
+      console.log(response)
+      const data = await response.json()
+      
+      if (data.success) {
+        // Format the output with stdout, stderr if available
+        let outputText = ""
+        
+        if (data.result.run.stdout) {
+          outputText += `Output:\n${data.result.run.stdout}\n`
         }
-      }, 1000)
+        
+        if (data.result.run.stderr) {
+          outputText += `\nErrors:\n${data.result.run.stderr}`
+        }
+        
+        // Add execution info
+        // outputText += `\n\nExecution Time: ${data.result.run.wall_time}ms`
+        // outputText += `\nMemory Used: ${(data.result.run.memory / (1024 * 1024)).toFixed(2)}MB`
+        
+        setOutput(outputText)
+      } else {
+        // Handle execution failures
+        if (data.status === 'TLE') {
+          setOutput("Time Limit Exceeded - Your code took too long to execute.")
+        } else if (data.status === 'MLE') {
+          setOutput("Memory Limit Exceeded - Your code used too much memory.")
+        } else {
+          setOutput(`Execution Error: ${data.message || 'Unknown error occurred'}`)
+        }
+      }
     } catch (error) {
-      setOutput(`Error: ${error instanceof Error ? error.message : "Unknown error"}`)
+      setOutput(`Error: ${error instanceof Error ? error.message : "Failed to execute code. Please try again."}`)
+    } finally {
       setIsRunning(false)
     }
   }
@@ -111,7 +130,7 @@ function App() {
         <div className="flex flex-col gap-4">
           <Card className="p-4 bg-gray-800 border-gray-700 flex-grow">
             <h2 className="text-xl font-bold mb-4">Code Editor</h2>
-            <CodeEditor value={code} onChange={setCode} language="javascript" />
+            <CodeEditor value={code} onChange={setCode} language="python" />
           </Card>
 
           <Card className="p-4 bg-gray-800 border-gray-700">
