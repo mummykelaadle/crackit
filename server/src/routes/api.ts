@@ -3,6 +3,7 @@ import { executeCodeController } from '../controllers/codeExecution';
 import { randomBytes } from 'crypto';
 import multer from 'multer';
 import { analyzeAudioAndCode } from '../controllers/codeEvaluation';
+import { getProblem } from '../controllers/problemController';
 
 const router = express.Router();
 const upload = multer();
@@ -14,6 +15,9 @@ router.get('/', (req, res) => {
 
 // Code execution endpoint
 router.post('/execute', executeCodeController);
+
+// Problem endpoint - Get problem by ID
+router.get('/problem/:id', getProblem);
 
 // Generate a random session ID
 router.get('/createSessionID', (req, res) => {

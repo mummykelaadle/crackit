@@ -18,14 +18,59 @@ const CodingPage = () => {
   const [code, setCode] = useState("# Write your code here\n\n")
   const [output, setOutput] = useState("")
   const [isRunning, setIsRunning] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     fetchQuestion()
   }, [])
 
-  // TODO: add proper implementation to fetch question from backend
   const fetchQuestion = async () => {
     try {
+      setIsLoading(true)
+      // Using a sample ObjectId from the problems.ts file
+      const problemId = "6802cff382aab64098bd479c" // Two Sum problem
+      
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/problem/${problemId}`)
+      const data = await response.json()
+      
+      if (data.success && data.problem) {
+        setQuestion({
+          id: data.problem._id,
+          title: data.problem.title,
+          description: data.problem.description,
+          examples: data.problem.examples || [],
+          constraints: data.problem.constraints || []
+        })
+      } else {
+        console.error("Error fetching problem:", data.message)
+        // Fallback to default problem if API fails
+        setQuestion({
+          id: "1",
+          title: "Two Sum",
+          description:
+            "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target. You may assume that each input would have exactly one solution, and you may not use the same element twice.",
+          examples: [
+            {
+              input: "nums = [2,7,11,15], target = 9",
+              output: "[0,1]",
+              explanation: "Because nums[0] + nums[1] == 9, we return [0, 1].",
+            },
+            {
+              input: "nums = [3,2,4], target = 6",
+              output: "[1,2]",
+            },
+          ],
+          constraints: [
+            "2 <= nums.length <= 10^4",
+            "-10^9 <= nums[i] <= 10^9",
+            "-10^9 <= target <= 10^9",
+            "Only one valid answer exists.",
+          ],
+        })
+      }
+    } catch (error) {
+      console.error("Error fetching question:", error)
+      // Fallback to default problem if API fails
       setQuestion({
         id: "1",
         title: "Two Sum",
@@ -49,8 +94,8 @@ const CodingPage = () => {
           "Only one valid answer exists.",
         ],
       })
-    } catch (error) {
-      console.error("Error fetching question:", error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
