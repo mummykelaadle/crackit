@@ -8,7 +8,8 @@ import morgan from 'morgan';
 import connectDB from './config/db';
 import apiRoutes from './routes/api';
 import codeEvalRoutes from './routes/evaluator';
-
+import interviewRoutes from './routes/interview';
+import interviewResumeRoutes from './routes/interviewResume';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -25,6 +26,8 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use('/api', apiRoutes);
 app.use('/api/evaluator', codeEvalRoutes);
+app.use('/api/interview', interviewRoutes);
+app.use('/api/interviewResume', interviewResumeRoutes);
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
 });
