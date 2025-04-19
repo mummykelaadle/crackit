@@ -3,7 +3,7 @@ import { evaluateCodeAndTranscript } from '../utils/evaluateCode';
 import { transcribeAudio } from '../utils/audioTranscription';
 import { UserMessage } from '../models/UserMessageModel';
 import { AgentMessage } from '../models/AgentMessageModel';
-import { Express } from 'express';
+import { ChatHistory, IChatHistory, IChatMessage } from '../models/ChatHistoryModel';
 
 interface CodeEvaluationRequest {
   sessionId: string;
@@ -17,24 +17,35 @@ interface EvaluationResult {
   content: string;
 }
 
-const sessionIdToChatHistory = new Map<string, Array<InstanceType<typeof UserMessage> | InstanceType<typeof AgentMessage>>>();
+const sessionIdToChatHistory = new Map<string,IChatHistory>();
 
 export const codeEvaluationController = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { sessionId, code, transcript, question } = req.body as CodeEvaluationRequest;
 
     const userMessage = new UserMessage({ code, transcript });
-    const history = sessionIdToChatHistory.get(sessionId) || [];
-
-    if (history.length === 0) {
+    
+    let history = sessionIdToChatHistory.get(sessionId);
+    if (!history) {
+      const newChatHistory = await ChatHistory.create({ messages: [] });
+      sessionIdToChatHistory.set(sessionId, newChatHistory);
+      history=newChatHistory
+    }
+    if (history.messages.length === 0) {
       sessionIdToChatHistory.set(sessionId, history);
     }
 
-    const result: EvaluationResult = await evaluateCodeAndTranscript(question, code, transcript, history);
+    const result: EvaluationResult = await evaluateCodeAndTranscript(question, code, transcript, history.messages);
 
     if (result.success) {
       const agentMessage = new AgentMessage({ content: result.content });
-      history.push(userMessage, agentMessage);
+      // Create chat message objects with references to the actual messages
+      const userChatMessage = { type: 'user', message: userMessage._id } as IChatMessage;
+      const agentChatMessage = { type: 'agent', message: agentMessage._id } as IChatMessage;
+      
+      // Add both messages to the chat history
+      history.messages.push(userChatMessage, agentChatMessage);
+      history.save(); // Save the updated chat history
       return res.json({ status: true, content: result.content });
     } else {
       return res.json({ status: false, content: result.content });
@@ -52,6 +63,7 @@ export const codeEvaluationController = async (req: Request, res: Response): Pro
  * @param question - The current question.
  * @returns Feedback from the LLM-based InterviewAgent.
  */
+//@ts-ignore
 export const analyzeAudioAndCode = async (audio: Express.Multer.File, code: string, question: string) => {
   try {
     // Step 1: Transcribe the audio to text
