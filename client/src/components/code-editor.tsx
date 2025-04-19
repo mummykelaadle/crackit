@@ -1,29 +1,24 @@
 "use client"
 
-import React, { useState } from "react"
+import React from "react"
 import MonacoEditor from "react-monaco-editor"
 
 interface CodeEditorProps {
-  onExplain: (code: string) => void
-  aiResponse: string | null
+  value: string;
+  onChange: (code: string) => void;
+  language: string;
 }
 
-const CodeEditor: React.FC<CodeEditorProps> = ({ onExplain, aiResponse }) => {
-  const [code, setCode] = useState("// Write your code here...")
-
-  const handleExplainClick = () => {
-    onExplain(code)
-  }
-
+const CodeEditor: React.FC<CodeEditorProps> = ({ value, onChange, language }) => {
   return (
     <div className="code-editor border border-gray-700 rounded-md p-4 bg-[#1e1e1e]">
       <MonacoEditor
         width="100%"
         height="400px"
-        language="javascript"
+        language={language}
         theme="vs-dark"
-        value={code}
-        onChange={(newCode) => setCode(newCode)}
+        value={value}
+        onChange={onChange}
         options={{
           selectOnLineNumbers: true,
           automaticLayout: true,
@@ -33,18 +28,6 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ onExplain, aiResponse }) => {
           scrollBeyondLastLine: false,
         }}
       />
-      <button
-        onClick={handleExplainClick}
-        className="mt-4 bg-blue-500 hover:bg-blue-600 transition text-white px-4 py-2 rounded"
-      >
-        Explain This
-      </button>
-      {aiResponse && (
-        <div className="mt-4 p-4 border rounded bg-gray-100 text-black">
-          <h3 className="font-bold mb-2">AI Response:</h3>
-          <p>{aiResponse}</p>
-        </div>
-      )}
     </div>
   )
 }
