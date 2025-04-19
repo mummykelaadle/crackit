@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
-import { analyzeInterviewExp } from '../utils/interviewAnalyzer';
+// import { analyzeInterviewExp } from '../utils/interviewAnalyzer';
+import { analyzeInterviewExp } from '../utils/interviewAnalyzerGemini';
 
 /**
  * Controller function that handles analyzing interview experience articles
@@ -8,7 +9,7 @@ import { analyzeInterviewExp } from '../utils/interviewAnalyzer';
 export const analyzeInterviewController = async (req: Request, res: Response) => {
   try {
     // Extract the interview experience article and response format from the request body
-    const { article, responseFormat } = req.body;
+    const { article } = req.body;
 
     // Validate that article is provided
     if (!article || typeof article !== 'string' || article.trim().length === 0) {
@@ -17,12 +18,9 @@ export const analyzeInterviewController = async (req: Request, res: Response) =>
         error: 'Interview experience article is required'
       });
     }
-    
-    // Determine if JSON response format is requested
-    const useJsonFormat = responseFormat === 'json';
 
     // Call the analyzer function with the JSON format option
-    const result = await analyzeInterviewExp(article, useJsonFormat);
+    const result = await analyzeInterviewExp(article);
 
     // Return the analysis results
     return res.status(200).json({
