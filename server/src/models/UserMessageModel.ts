@@ -4,6 +4,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 interface IUserMessage extends Document {
   code?: string;
   transcript?: string;
+  improved: boolean; // new field to indicate if message is improved by AI
   createdAt: Date;
   updatedAt: Date;
 }
@@ -20,6 +21,11 @@ const userMessageSchema = new Schema<IUserMessage>(
       type: String,
       required: false,
       trim: true,
+    },
+    improved: {
+      type: Boolean,
+      required: true,
+      default: false, // default to false (user message)
     },
   },
   {

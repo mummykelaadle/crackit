@@ -7,6 +7,7 @@ import {
   IChatHistory,
   IChatMessage,
 } from "../models/ChatHistoryModel";
+import { getImprovedMessageFromTranscriptionAndResume } from "../utils/improvedMessage";
 
 interface CodeEvaluationRequest {
   sessionId: string;
@@ -78,19 +79,41 @@ export const resumeEvaluationController = async (
 
     if (result.success) {
       const agentMessage = new AgentMessage({ content: result.content });
+
       const userChatMessage = {
         type: "user",
         message: userMessage._id,
       } as IChatMessage;
+
       const agentChatMessage = {
         type: "agent",
         message: agentMessage._id,
       } as IChatMessage;
-      // Add both messages to the chat history
-      history.messages.push(userChatMessage, agentChatMessage);
-      history.save(); // Save the updated chat history
-      sessionIdToChatHistory.set(sessionId, history);
-      // Save the updated chat history
+
+      async function postSendingTasks() {
+        // Save the user and agent messages to the database
+        await userMessage.save();
+        await agentMessage.save();
+
+        // Add both messages to the chat history
+        history?.messages.push(userChatMessage, agentChatMessage);    
+        // Update the chat history in the database
+        try {
+          await history?.save();
+          console.log("Successfully saved chat history");
+        } catch (error) {
+          console.error("Error saving chat history:", error);
+        }
+        // Only set if history is defined
+        if (history) {
+          sessionIdToChatHistory.set(sessionId, history);
+        }
+      }
+
+      // Start post-processing in the background
+      postSendingTasks();
+
+      // Return the response immediately
       return res.json({ status: true, content: result.content });
     } else {
       return res.json({ status: false, content: result.content });
