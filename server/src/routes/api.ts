@@ -77,7 +77,8 @@ router.get('/articles', async (req, res) => {
     const formattedArticles = articles.map((article, index) => ({
       id: article._id,
       title: `Interview ${index + 1}`,
-      preview: (article.content ?? '').substring(0, 100) + "...",
+      // preview: (article.content ?? '').substring(0, 100) + "...",
+      content: (article.content ?? ''),
       author: "Anonymous",
       date: article.createdAt,
       isYours: false, // you can dynamically set this based on logged-in user

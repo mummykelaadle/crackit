@@ -9,7 +9,7 @@ import { Link } from "react-router-dom"
 interface Interview {
   id: string
   title: string
-  preview: string
+  content: string
   author: string
   date: string
   isYours: boolean
@@ -28,6 +28,7 @@ export default function InterviewHub() {
         const response = await fetch(`${VITE_BACKEND_URL}/api/articles`);
 
         const data = await response.json();
+        console.log(data)
         setInterviews(data);
       } catch (error) {
         console.error("Failed to fetch interviews:", error);
@@ -119,7 +120,7 @@ function InterviewCard({ interview }: { interview: Interview }) {
           </CardDescription>
         </CardHeader>
         <CardContent className="flex-grow">
-          <p className="text-muted-foreground">{interview.preview}</p>
+          <p className="text-muted-foreground">{interview.content.substring(0, 100) + "..."}</p>
         </CardContent>
         <CardFooter>
           <Button variant="default" onClick={() => console.log('Behavioral clicked')}>Behavioral</Button>
