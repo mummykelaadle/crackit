@@ -3,10 +3,15 @@ import { Button } from "./ui/button"
 import { Mic, MicOff, Video, VideoOff } from "lucide-react"
 import interviewerVideo from "../assets/interviewer.mp4"
 
-export default function VideoFeeds() {
+interface VideoFeedsProps {
+  isSpeaking: boolean;
+}
+
+export default function VideoFeeds({ isSpeaking }: VideoFeedsProps) {
   const [isMicOn, setIsMicOn] = useState(true)
   const [isVideoOn, setIsVideoOn] = useState(true)
   const localVideoRef = useRef<HTMLVideoElement>(null)
+  const interviewerVideoRef = useRef<HTMLVideoElement>(null)
   const [isLocalStreamReady, setIsLocalStreamReady] = useState(false)
 
   useEffect(() => {
@@ -18,6 +23,17 @@ export default function VideoFeeds() {
       stopLocalStream()
     }
   }, [])
+
+  useEffect(() => {
+    // Control interviewer video playback based on speaking state
+    if (interviewerVideoRef.current) {
+      if (isSpeaking) {
+        interviewerVideoRef.current.play()
+      } else {
+        interviewerVideoRef.current.pause()
+      }
+    }
+  }, [isSpeaking])
 
   const startLocalStream = async () => {
     try {
@@ -80,10 +96,10 @@ export default function VideoFeeds() {
       <div className="flex flex-col">
         <div className="relative bg-gray-700 rounded-md overflow-hidden aspect-video flex items-center justify-center">
           <video
+            ref={interviewerVideoRef}
             src={interviewerVideo}
             loop
             className="w-full h-full object-cover"
-            autoPlay
             muted
             playsInline
           />
