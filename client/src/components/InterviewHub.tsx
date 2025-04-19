@@ -14,7 +14,8 @@ interface Interview {
   date: string
   isYours: boolean
 }
-
+const VITE_BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+console.log(VITE_BACKEND_URL)
 export default function InterviewHub() {
   const [interviews, setInterviews] = useState<Interview[]>([])
   const [loading, setLoading] = useState(true)
@@ -22,57 +23,20 @@ export default function InterviewHub() {
 
   useEffect(() => {
     const fetchInterviews = async () => {
-      setLoading(true)
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      setLoading(true);
+      try {
+        const response = await fetch(`${VITE_BACKEND_URL}/api/articles`);
 
-      const dummyInterviews: Interview[] = [
-        {
-          id: "1",
-          title: "Frontend Developer at Tech Giant",
-          preview: "I was asked about React hooks, state management, and had to solve a UI challenge...",
-          author: "Jane Doe",
-          date: "2023-04-15",
-          isYours: true,
-        },
-        {
-          id: "2",
-          title: "Senior React Developer Interview",
-          preview: "The interview focused on advanced React patterns, performance optimization...",
-          author: "John Smith",
-          date: "2023-03-22",
-          isYours: false,
-        },
-        {
-          id: "3",
-          title: "Full Stack Developer at Startup",
-          preview: "I had to design a system architecture and explain my choices for backend and frontend...",
-          author: "Alex Johnson",
-          date: "2023-05-10",
-          isYours: false,
-        },
-        {
-          id: "4",
-          title: "UI/UX Developer Technical Interview",
-          preview: "The interview included questions about design systems, accessibility, and component architecture...",
-          author: "Sam Wilson",
-          date: "2023-04-28",
-          isYours: true,
-        },
-        {
-          id: "5",
-          title: "React Native Developer Interview",
-          preview: "I was asked about mobile-specific challenges, navigation patterns, and state management...",
-          author: "Taylor Brown",
-          date: "2023-05-05",
-          isYours: false,
-        },
-      ]
+        const data = await response.json();
+        setInterviews(data);
+      } catch (error) {
+        console.error("Failed to fetch interviews:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      setInterviews(dummyInterviews)
-      setLoading(false)
-    }
-
-    fetchInterviews()
+    fetchInterviews();
   }, [])
 
   const filteredInterviews = interviews.filter(
@@ -82,6 +46,11 @@ export default function InterviewHub() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       <h1 className="text-3xl font-bold mb-6">Interview Experiences Hub</h1>
+
+      <div className="flex justify-center space-x-4 mb-6">
+        <Button variant="default" onClick={() => setActiveTab("behavioral")}>Behavioral</Button>
+        <Button variant="default" onClick={() => setActiveTab("coding")}>Coding</Button>
+      </div>
 
       <Tabs defaultValue="all" onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 mb-8">
@@ -153,11 +122,8 @@ function InterviewCard({ interview }: { interview: Interview }) {
           <p className="text-muted-foreground">{interview.preview}</p>
         </CardContent>
         <CardFooter>
-          <Link to={`/interviews/${interview.id}`} className="w-full">
-            <Button variant="default" className="w-full">
-              Read Full Interview
-            </Button>
-          </Link>
+          <Button variant="default" onClick={() => console.log('Behavioral clicked')}>Behavioral</Button>
+          <Button variant="default" onClick={() => console.log('Coding clicked')}>Coding</Button>
         </CardFooter>
       </Card>
     </motion.div>
