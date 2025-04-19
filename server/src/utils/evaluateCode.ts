@@ -71,6 +71,7 @@ export async function evaluateCodeAndTranscript(
             //@ts-ignore
             return { success: true, content: result.output.choices[0].message.content };
         } else if (result.status === "failed") {
+            console.error(result)
             return { success: false, content: `Execution failed: ${result.error}` };
         }
 

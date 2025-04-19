@@ -58,7 +58,7 @@ const CodingPage = () => {
     setOutput("Running code...")
 
     try {
-      const response = await fetch("http://localhost:3000/api/execute", {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/execute`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

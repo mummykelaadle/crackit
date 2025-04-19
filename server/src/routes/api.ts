@@ -21,6 +21,7 @@ router.get('/createSessionID', (req, res) => {
   res.json({ sessionId });
 });
 
+// NOTE: The route is already implemented at /api/evaluate .This should be removed in production
 // Endpoint to handle audio, code, and question data
 router.post('/analyze', upload.single('audio'), async (req, res) => {
   try {

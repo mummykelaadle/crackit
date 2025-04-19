@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './components/Home';
 import ResumePage from './components/resumePage';
 import BehavioralPage from './components/BehavioralPage';
-import CodingPage from './components/codingPage';
+import CodingPage from './components/CodingPage';
 
 const App = () => {
   return (
