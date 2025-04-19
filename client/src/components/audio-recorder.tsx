@@ -46,6 +46,8 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ getCurrentCode, getCurren
   const [interimTranscript, setInterimTranscript] = useState('');
   const [feedback, setFeedback] = useState<string>('');
   const [sessionId, setSessionId] = useState<string>('');
+  const [isHovered, setIsHovered] = useState(false);
+  const [feedbackHistory, setFeedbackHistory] = useState<string[]>([]);
   
   // References
   const recognitionRef = useRef<any>(null);
@@ -224,8 +226,10 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ getCurrentCode, getCurren
       
       if (data.status && data.content) {
         setFeedback(data.content);
+        setFeedbackHistory((prev) => [...prev, data.content]);
       } else if (data.content) {
         setFeedback(data.content);
+        setFeedbackHistory((prev) => [...prev, data.content]);
         console.warn('Evaluation returned with status false');
       } else {
         console.warn('No content in evaluation response');
@@ -318,40 +322,38 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ getCurrentCode, getCurren
     }
   }, [feedback]);
 
+  const toggleListening = () => {
+    if (!recognitionRef.current) {
+      const initialized = initSpeechRecognition();
+      if (!initialized) return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      recognitionRef.current.start();
+      setIsListening(true);
+    }
+  };
+
   return (
-    <div className="p-3 bg-gray-800 border-gray-700 rounded-lg">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-white">Interview Assistant</h2>
-        <div className="flex gap-2">
-          <button
-            onClick={startListening}
-            disabled={isListening}
-            className={`px-3 py-1 rounded text-sm ${isListening ? 'bg-gray-600 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`}
-          >
-            Start Listening
-          </button>
-          <button
-            onClick={stopListening}
-            disabled={!isListening}
-            className={`px-3 py-1 rounded text-sm ${!isListening ? 'bg-gray-600 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'}`}
-          >
-            Stop Listening
-          </button>
-        </div>
+    <div className="fixed left-4 bottom-4 z-50 flex items-center">
+      {/* AI Button */}
+      <div
+        className={`w-12 h-12 rounded-full shadow-lg cursor-pointer flex items-center justify-center ${
+          isListening ? 'bg-red-500' : 'bg-blue-500'
+        }`}
+        onClick={toggleListening}
+      >
+        <span className="text-white font-bold">{isListening ? 'Stop' : 'AI'}</span>
       </div>
-      
-      {isListening && (
-        <div className="flex items-center mt-2">
-          <div className={`w-3 h-3 rounded-full mr-2 ${isSpeakingRef.current ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'}`}></div>
-          <span className="text-sm text-gray-300">
-            {isSpeakingRef.current ? 'Listening (speech detected)' : 'Listening (waiting for speech)'}
-          </span>
-        </div>
-      )}
-      
-      <LiveTranscription finalTranscript={finalTranscript} interimTranscript={interimTranscript} />
-      
-      <FeedbackDisplay feedback={feedback} />
+
+      {/* AI Feedback Text */}
+      <div className="ml-4 text-sm text-white bg-gray-800 p-2 rounded-lg shadow-lg max-w-[85%]">
+        <p>{feedbackHistory[feedbackHistory.length - 1] || "AI is ready to assist you."}</p>
+        <p className="text-gray-400 mt-1">You: {finalTranscript || interimTranscript || "Listening..."}</p>
+      </div>
     </div>
   );
 };
