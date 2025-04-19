@@ -23,6 +23,7 @@ const CodingPage = () => {
     fetchQuestion()
   }, [])
 
+  // TODO: add proper implementation to fetch question from backend
   const fetchQuestion = async () => {
     try {
       setQuestion({

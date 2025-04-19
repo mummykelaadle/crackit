@@ -205,7 +205,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ getCurrentCode, getCurren
       console.log('Code length:', code.length);
       console.log('Using session ID:', sessionId);
       
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/evaluate`, {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/evaluator/evaluate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
