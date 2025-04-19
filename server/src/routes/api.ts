@@ -4,9 +4,31 @@ import { randomBytes } from 'crypto';
 import multer from 'multer';
 import { analyzeAudioAndCode } from '../controllers/codeEvaluation';
 import { getProblem } from '../controllers/problemController';
+import mongoose from 'mongoose';
+require('dotenv').config();
+
 
 const router = express.Router();
 const upload = multer();
+
+// MongoDB Connection
+const mongoUri = process.env.MONGODB_URI;
+if (!mongoUri) {
+  throw new Error('MONGODB_URI is not defined in the environment variables');
+}
+mongoose.connect(mongoUri)
+.then(() => console.log('Connected to MongoDB Atlas'))
+.catch(err => console.error('MongoDB connection error:', err));
+
+const articleSchema = new mongoose.Schema({
+  content: String,
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+}, { collection: "articles" });
+
+const Article = mongoose.model("Article", articleSchema);
 
 // Example route
 router.get('/', (req, res) => {
@@ -46,5 +68,29 @@ router.post('/analyze', upload.single('audio'), async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+// Route: GET /articles
+router.get('/articles', async (req, res) => {
+  try {
+    const articles = await Article.find().sort({ createdAt: -1 });
+   
+    const formattedArticles = articles.map((article, index) => ({
+      id: article._id,
+      title: `Interview ${index + 1}`,
+      // preview: (article.content ?? '').substring(0, 100) + "...",
+      content: (article.content ?? ''),
+      author: "Anonymous",
+      date: article.createdAt,
+      isYours: false, // you can dynamically set this based on logged-in user
+    }));
+
+
+    res.status(200).json(formattedArticles);
+  } catch (error) {
+    console.error('Failed to fetch articles:', error);
+    res.status(500).json({ error: 'Failed to fetch articles' });
+  }
+});
+
 
 export default router;
