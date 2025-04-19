@@ -6,41 +6,87 @@ import VideoFeeds from "./video-feeds"
 import QuestionDisplay from "./question-display"
 import CodeOutput from "./code-output"
 import AudioRecorder from "./audio-recorder"
+import { useParams, useNavigate } from "react-router-dom"
 
-const CodingPage = () => {
-  const [question, setQuestion] = useState<{
-    id: string
-    title: string
-    description: string
-    examples: { input: string; output: string; explanation?: string }[]
-    constraints: string[]
-  } | null>(null)
+interface CodingPageProps {
+  problemId?: string
+}
+
+interface TestCase {
+  input: Record<string, any>
+  expectedOutput: any
+}
+
+interface Problem {
+  id: string
+  title: string
+  description: string
+  examples: { input: string; output: string; explanation?: string }[]
+  constraints: string[]
+  testCases?: Record<string, TestCase>
+  difficulty?: string
+  tags?: string[]
+}
+
+const CodingPage: React.FC<CodingPageProps> = ({ problemId: propProblemId }) => {
+  const { id: routeId } = useParams<{ id: string }>()
+  const navigate = useNavigate()
+  const [question, setQuestion] = useState<Problem | null>(null)
   const [code, setCode] = useState("# Write your code here\n\n")
   const [output, setOutput] = useState("")
   const [isRunning, setIsRunning] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
+  // Use problemId from props, route params, or default to the sample
+  const activeProblemId = propProblemId || routeId || "6802cff382aab64098bd479c" // Two Sum problem
+
   useEffect(() => {
     fetchQuestion()
-  }, [])
+  }, [activeProblemId])
 
   const fetchQuestion = async () => {
     try {
       setIsLoading(true)
-      // Using a sample ObjectId from the problems.ts file
-      const problemId = "6802cff382aab64098bd479c" // Two Sum problem
       
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/problem/${problemId}`)
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/problem/${activeProblemId}`)
       const data = await response.json()
       
       if (data.success && data.problem) {
-        setQuestion({
-          id: data.problem._id,
-          title: data.problem.title,
-          description: data.problem.description,
-          examples: data.problem.examples || [],
-          constraints: data.problem.constraints || []
-        })
+        // Format the problem data for display
+        const examples = data.problem.examples || []
+        
+        // If there are testCases but no examples, generate examples from the first few test cases
+        if ((!examples || examples.length === 0) && data.problem.testCases) {
+          const testCasesArray = Object.values(data.problem.testCases)
+          const generatedExamples = testCasesArray.slice(0, 3).map((tc: TestCase) => {
+            return {
+              input: JSON.stringify(tc.input),
+              output: JSON.stringify(tc.expectedOutput)
+            }
+          })
+          
+          setQuestion({
+            id: data.problem._id,
+            title: data.problem.title,
+            description: data.problem.description,
+            examples: generatedExamples,
+            constraints: data.problem.constraints || [],
+            testCases: data.problem.testCases,
+            difficulty: data.problem.difficulty,
+            tags: data.problem.tags
+          })
+        } else {
+          setQuestion({
+            id: data.problem._id,
+            title: data.problem.title,
+            description: data.problem.description,
+            examples: data.problem.examples || [],
+            constraints: data.problem.constraints || [],
+            testCases: data.problem.testCases,
+            difficulty: data.problem.difficulty,
+            tags: data.problem.tags
+          })
+        }
       } else {
         console.error("Error fetching problem:", data.message)
         // Fallback to default problem if API fails

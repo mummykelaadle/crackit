@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button"
 import { Loader2, Plus } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 
 interface Interview {
   id: string
@@ -100,6 +100,38 @@ function InterviewGrid({ interviews }: { interviews: Interview[] }) {
 }
 
 function InterviewCard({ interview }: { interview: Interview }) {
+  const navigate = useNavigate();
+
+  const handleCodingClick = async () => {
+    try {
+      // Make API call to analyze the article content
+      const response = await fetch(`${VITE_BACKEND_URL}/api/interview/analyze`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          responseFormat: "json",
+          article: interview.content
+        })
+      });
+
+      const data = await response.json();
+      // console.log("API Response:", data.problem.id);
+      
+      if (data && data.data?.problem?.id) {
+        // Navigate to coding page with the extracted problem ID
+        navigate(`/coding/${data.data.problem.id}`);
+      } else {
+        console.error("Failed to extract coding problem from article:", data);
+        alert("Could not extract a coding problem from this article. Please try another one.");
+      }
+    } catch (error) {
+      console.error("Error analyzing article:", error);
+      alert("An error occurred while analyzing the article. Please try again.");
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -124,7 +156,7 @@ function InterviewCard({ interview }: { interview: Interview }) {
         </CardContent>
         <CardFooter>
           <Button variant="default" onClick={() => console.log('Behavioral clicked')}>Behavioral</Button>
-          <Button variant="default" onClick={() => console.log('Coding clicked')}>Coding</Button>
+          <Button variant="default" onClick={handleCodingClick}>Coding</Button>
         </CardFooter>
       </Card>
     </motion.div>
