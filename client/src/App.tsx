@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react"
+import React,{ useState, useEffect } from "react"
 import { Button } from "./components/ui/button"
 import { Card } from "./components/ui/card"
 import CodeEditor from "./components/code-editor"
 import VideoFeeds from "./components/video-feeds"
 import QuestionDisplay from "./components/question-display"
 import CodeOutput from "./components/code-output"
+import AudioRecorder from "./components/audio-recorder"
 
 function App() {
   const [question, setQuestion] = useState<{
@@ -124,6 +125,8 @@ function App() {
           </Card>
         </div>
       </div>
+
+      <AudioRecorder />
 
       <div className="flex justify-center h-[50px] mt-2">
         <Button variant="outline" className="border-red-500 text-red-500 hover:bg-red-900 hover:text-white">
