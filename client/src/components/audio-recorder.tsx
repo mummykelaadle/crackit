@@ -48,6 +48,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ getCurrentCode, getCurren
   const [sessionId, setSessionId] = useState<string>('');
   const [isHovered, setIsHovered] = useState(false);
   const [feedbackHistory, setFeedbackHistory] = useState<string[]>([]);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   
   // References
   const recognitionRef = useRef<any>(null);
@@ -318,6 +319,25 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ getCurrentCode, getCurren
       utterance.lang = 'en-US';
       utterance.rate = 1; // Adjust the rate if needed
       utterance.pitch = 1; // Adjust the pitch if needed
+      
+      // Set speaking state to true when synthesis starts
+      utterance.onstart = () => {
+        console.log('AI started speaking feedback');
+        setIsSpeaking(true);
+      }
+      
+      // Add event listener for when speech ends
+      utterance.onend = () => {
+        console.log('AI finished speaking feedback');
+        setIsSpeaking(false);
+      };
+      
+      // Also handle errors to reset the speaking state
+      utterance.onerror = (event) => {
+        console.error('Speech synthesis error:', event);
+        setIsSpeaking(false);
+      };
+      
       window.speechSynthesis.speak(utterance);
     }
   }, [feedback]);
