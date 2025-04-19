@@ -3,6 +3,8 @@
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+  min-height: 100vh; /* Ensure it fits the viewport dynamically */
+  width: 100%; /* Adjust width to fit the viewport */
 }
 
 .logo {

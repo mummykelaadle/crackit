@@ -8,6 +8,8 @@ module.exports = {
       screens: {
         "2xl": "1400px",
       },
+      minWidth: "100vw",
+      minHeight: "100vh",
     },
     extend: {
       colors: {
