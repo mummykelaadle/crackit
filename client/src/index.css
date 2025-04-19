@@ -63,9 +63,27 @@ body {
   height: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden;
+  overflow: auto; /* Allow scrolling */
 }
 
 #root {
   height: 100%;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+
+/* Add hover pause effect */
+.animate-marquee:hover {
+  animation-play-state: paused;
 }
