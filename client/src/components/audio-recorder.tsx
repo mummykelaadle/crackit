@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 
+
 interface LiveTranscriptionProps {
   finalTranscript: string;
   interimTranscript: string;
@@ -305,6 +306,17 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ getCurrentCode, getCurren
       }
     };
   }, []);
+
+  // Add Web Speech Synthesis to read feedback automatically
+  useEffect(() => {
+    if (feedback) {
+      const utterance = new SpeechSynthesisUtterance(feedback);
+      utterance.lang = 'en-US';
+      utterance.rate = 1; // Adjust the rate if needed
+      utterance.pitch = 1; // Adjust the pitch if needed
+      window.speechSynthesis.speak(utterance);
+    }
+  }, [feedback]);
 
   return (
     <div className="p-3 bg-gray-800 border-gray-700 rounded-lg">

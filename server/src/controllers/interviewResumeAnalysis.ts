@@ -7,7 +7,6 @@ import {
   IChatHistory,
   IChatMessage,
 } from "../models/ChatHistoryModel";
-import { getImprovedMessageFromTranscriptionAndResume } from "../utils/improvedMessage";
 
 interface CodeEvaluationRequest {
   sessionId: string;

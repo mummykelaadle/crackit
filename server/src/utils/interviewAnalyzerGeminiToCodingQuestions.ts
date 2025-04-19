@@ -7,18 +7,23 @@ dotenv.config();
 
 const codingQuestionsSchema = z.array(z.string());
 
+// Create a schema for the response
+const similarQuestionSchema = z.object({
+  id: z.string()
+});
+
 async function identifySimilarQuestions(
   article: string,
   questionMapAsString: string
-): Promise<string[] | null> {
+): Promise<string | null> {
   //@ts-ignore
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
   const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" }); // Using 'pro' for potentially better understanding
 
   const prompt = `Please read the following article and identify the coding questions mentioned in it.
 Then, compare these questions to the following list of questions and their corresponding object IDs (as a JSON object).
-Identify the top 2 most similar questions from the list to the questions found in the article.
-Return a JSON array containing the object IDs of these top 1 most similar question.
+Identify the most similar question from the list to the questions found in the article.
+Return a JSON object containing the object ID of this most similar question.
 
 Article:
 ${article}
@@ -26,52 +31,46 @@ ${article}
 Question List:
 ${questionMapAsString}
 
-Object IDs of the 2 most similar questions:`;
+example response:
+{
+  "id": "680294d88e98930b17e3c6d7"
+}`;
 
   try {
     const result = await model.generateContent(prompt);
     const rawOutput = result.response.text();
-    console.log("Raw Output (Similar Questions):", rawOutput);
+    console.log("Raw Output (Similar Question):", rawOutput);
 
-    // Attempt to find the start and end of the JSON array
-    const jsonStartIndex = rawOutput.indexOf("[");
-    const jsonEndIndex = rawOutput.lastIndexOf("]");
-
-    if (
-      jsonStartIndex !== -1 &&
-      jsonEndIndex !== -1 &&
-      jsonStartIndex < jsonEndIndex
-    ) {
-      const jsonString = rawOutput
-        .substring(jsonStartIndex, jsonEndIndex + 1)
+    // Try to extract JSON object from the response
+    try {
+      // First clean the output by removing any markdown formatting
+      const cleanedOutput = rawOutput
+        .replace(/```json\n?/g, "")
+        .replace(/```/g, "")
         .trim();
-      try {
-        const parsedOutput = JSON.parse(jsonString);
-        if (
-          Array.isArray(parsedOutput) &&
-          parsedOutput.length <= 2 &&
-          parsedOutput.every((item) => typeof item === "string")
-        ) {
-          return parsedOutput;
-        } else {
-          console.error(
-            "AI output for similar questions is not in the expected array format:",
-            parsedOutput
-          );
-          return null;
-        }
-      } catch (parseError) {
+      
+      // Parse the cleaned output
+      const parsedOutput = JSON.parse(cleanedOutput);
+      
+      // Validate with zod schema
+      const validatedOutput = similarQuestionSchema.safeParse(parsedOutput);
+      
+      if (validatedOutput.success) {
+        return validatedOutput.data.id;
+      } else {
         console.error(
-          "Error parsing JSON from similar questions output:",
-          parseError
+          "AI output for similar questions is not in the expected format:",
+          parsedOutput,
+          validatedOutput.error
         );
-        console.error("Problematic JSON string:", jsonString);
         return null;
       }
-    } else {
+    } catch (parseError) {
       console.error(
-        "Could not find valid JSON array in AI output for similar questions."
+        "Error parsing JSON from similar questions output:",
+        parseError
       );
+      console.error("Problematic output:", rawOutput);
       return null;
     }
   } catch (error) {
@@ -150,19 +149,20 @@ export async function analyzeInterviewExp(
     const extractedQuestions = await extractCodingQuestions(
       interviewExperienceArticle
     );
+    console.log("Extracted Questions:", extractedQuestions);
 
     if (extractedQuestions && extractedQuestions.length > 0) {
       console.log("Extracted Coding Questions:", extractedQuestions);
 
-      const similarQuestionIds = await identifySimilarQuestions(
+      const similarQuestionId = await identifySimilarQuestions(
         interviewExperienceArticle,
         problemsInfo
       );
 
-      if (similarQuestionIds) {
-        console.log("Most Similar Question Object IDs:", similarQuestionIds);
+      if (similarQuestionId) {
+        console.log("Most Similar Question Object ID:", similarQuestionId);
         const selectedProblem = problems.find(
-          (p) => p._id === similarQuestionIds[0]
+          (p) => p._id === similarQuestionId
         );
 
         if (selectedProblem) {
@@ -194,7 +194,7 @@ export async function analyzeInterviewExp(
         const defaultProblemId = "6802cff382aab64098bd479c";
         const defaultProblem = problems.find((p) => p._id === defaultProblemId);
         console.log(
-          "Could not identify the top 2 most similar question object IDs."
+          "Could not identify the most similar question object ID."
         );
         return {
           problemId: defaultProblem ? defaultProblem._id : "",
@@ -205,7 +205,7 @@ export async function analyzeInterviewExp(
             : "No matching problem found, and the default problem could not be located.",
           success: !!defaultProblem,
           error:
-            "Could not identify the top 2 most similar question object IDs.",
+            "Could not identify the most similar question object ID.",
         };
       }
     } else {
