@@ -13,6 +13,16 @@ mongoose.connect(process.env.MONGO_URI)
 .then(() => console.log('Connected to MongoDB Atlas'))
 .catch(err => console.error('MongoDB connection error:', err));
 
+// Article Model
+const articleSchema = new mongoose.Schema({
+  content: String,
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+}, { collection: "articles" });
+
+const Article = mongoose.model("Article", articleSchema);
                             
 // Route
 app.post('/capture', async (req, res) => {
