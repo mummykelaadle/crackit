@@ -182,7 +182,7 @@ const CodingPage = () => {
 
       <AudioRecorder />
 
-      <div className="flex justify-center h-[50px] mt-2">
+      <div className="flex justify-end h-[50px] mt-2">
         <Button variant="outline" className="border-red-500 text-red-500 hover:bg-red-900 hover:text-white">
           End Interview
         </Button>
