@@ -4,6 +4,8 @@ import fs from "fs";
 import path from "path";
 import { Problem, problems } from "../data/problems";
 
+dotenv.config();
+
 // Initialize Julep client
 const client = new Julep({ apiKey: process.env.JULEP_API_KEY });
 
@@ -19,8 +21,18 @@ export interface InterviewExpAnalysisResult {
   problemId: string;
   problem: Problem;
   behavioralQuestions: string[];
+  reasoning?: string;
   success: boolean;
   error?: string;
+}
+
+/**
+ * Interface for the structured tool call response from the agent
+ */
+interface ToolCallArguments {
+  problemId: string;
+  reasoning: string;
+  behavioralQuestions: string[];
 }
 
 /**
@@ -51,10 +63,12 @@ function getAnalyzerIds(): { agentId: string, taskId: string } {
  * The LLM will select the most appropriate problem based on the article content.
  * 
  * @param interviewExperienceArticle The full text of an interview experience article (e.g. from GeeksForGeeks)
+ * @param jsonResponse Whether to format the execution with JSON response format
  * @returns Analysis result containing the selected problem and behavioral questions
  */
 export async function analyzeInterviewExp(
-  interviewExperienceArticle: string
+  interviewExperienceArticle: string,
+  jsonResponse: boolean = false
 ): Promise<InterviewExpAnalysisResult> {
   try {
     // Get the IDs (either from config file or hardcoded)
@@ -72,13 +86,31 @@ export async function analyzeInterviewExp(
     // Provide the problems list without any difficulty filtering
     const problemsInfo = JSON.stringify(problemsData);
 
-    // Create execution with the task
-    const execution = await client.executions.create(taskId, {
+    // Set up execution options
+    const executionOptions: any = {
       input: {
         problems: problemsInfo,
         article: interviewExperienceArticle
       }
-    });
+    };
+
+    // Add response_format option if JSON response is requested
+    if (jsonResponse) {
+      executionOptions.response_format = { type: "json_object" };
+    }
+
+    // Create execution with the task
+    let execution;
+    try {
+      execution = await client.executions.create(taskId, executionOptions);
+    } catch (createError: any) {
+      // Handle 422 error responses 
+      if (createError.status === 422) {
+        console.error("Validation error creating execution:", createError.response?.data?.detail || createError.message);
+        throw new Error(`Execution creation failed: ${createError.response?.data?.detail?.[0]?.msg || "Validation error"}`);
+      }
+      throw createError;
+    }
 
     // Wait for the execution to complete
     let result;
@@ -86,66 +118,98 @@ export async function analyzeInterviewExp(
     const maxAttempts = 30; // Maximum 30 seconds wait time
     
     do {
-      result = await client.executions.get(execution.id);
-      if (result.status === "succeeded") {
-        // Parse the results from the execution
-        const response = result.output?.response?.trim() || "";
+      try {
+        result = await client.executions.get(execution.id);
+        console.log(JSON.stringify(result, null, 2));
         
-        // Extract problem ID from the response
-        const problemIdMatch = response.match(/Problem ID: ([a-z0-9]+)/i) || 
-                               response.match(/Selected problem: ([a-z0-9]+)/i) ||
-                               response.match(/problem_id: "([a-z0-9]+)"/i);
-        
-        // Extract behavioral questions from the response
-        const behavioralQuestionsMatch = response.match(/Behavioral Questions:([\s\S]*?)(?=Problem|$)/i) ||
-                                         response.match(/Behavioral Questions:([\s\S]*)/i);
-        
-        let problemId = problemIdMatch ? problemIdMatch[1] : "6802cff382aab64098bd479c"; // Default to Two Sum
-        let behavioralQuestions: string[] = [];
-        
-        if (behavioralQuestionsMatch) {
-          behavioralQuestions = behavioralQuestionsMatch[1]
-            .split(/\n\s*\d+\.\s*|\n\s*-\s*/)
-            .map(q => q.trim())
-            .filter(q => q.length > 0 && q.endsWith('?'));
-        }
-        
-        // If no behavioral questions were extracted, provide default ones
-        if (behavioralQuestions.length === 0) {
-          behavioralQuestions = [
-            "Tell me about yourself?",
-            "Why do you want to work at our company?",
-            "Describe a challenging situation you faced and how you handled it?"
-          ];
-        }
-        
-        // Find the problem by ID
-        const problem = problems.find(p => p._id === problemId);
-        
-        if (!problem) {
-          // If problem not found, default to Two Sum
-          problemId = "6802cff382aab64098bd479c"; 
+        // Handle successful responses (201)
+        if (result.status === "succeeded") {
+          // Extract tool calls from the choices array according to the response format
+          const toolCalls = (result.output as { tool_calls?: any[] })?.tool_calls || [];
+          
+          if (toolCalls.length > 0) {
+            // Find the analyze_interview tool call
+            const toolCall = toolCalls.find(call => 
+              call.function?.name === "analyze_interview"
+            );
+            
+            if (toolCall && toolCall.function) {
+              try {
+                // Parse the tool call arguments
+                const args: ToolCallArguments = JSON.parse(toolCall.function.arguments);
+                
+                // Validate the response has the required fields
+                if (!args.problemId) {
+                  throw new Error("Missing problemId in agent response");
+                }
+                
+                // Find the problem by ID
+                const problem = problems.find(p => p._id === args.problemId);
+                
+                if (!problem) {
+                  // If problem not found, default to Two Sum
+                  const defaultProblemId = "6802cff382aab64098bd479c";
+                  return {
+                    problemId: defaultProblemId,
+                    problem: problems.find(p => p._id === defaultProblemId)!,
+                    behavioralQuestions: args.behavioralQuestions || [
+                      "Tell me about yourself?",
+                      "Why do you want to work at our company?",
+                      "Describe a challenging situation you faced and how you handled it?"
+                    ],
+                    reasoning: "Default problem selected as the specified problem ID was not found.",
+                    success: true
+                  };
+                }
+                
+                // Return the successful result with all data
+                return {
+                  problemId: args.problemId,
+                  problem,
+                  behavioralQuestions: args.behavioralQuestions || [],
+                  reasoning: args.reasoning,
+                  success: true
+                };
+              } catch (parseError) {
+                console.error("Error parsing tool call arguments:", parseError);
+                console.error("Raw tool call:", toolCall);
+              }
+            }
+          }
+          
+          console.error("No valid tool call found in agent response");
+          console.error("Raw output:", result);
+          
+          // Fall back to default selection
+          const defaultProblemId = "6802cff382aab64098bd479c"; // Two Sum
           return {
-            problemId,
-            problem: problems.find(p => p._id === problemId)!,
-            behavioralQuestions,
-            success: true
+            problemId: defaultProblemId,
+            problem: problems.find(p => p._id === defaultProblemId)!,
+            behavioralQuestions: [
+              "Tell me about yourself?",
+              "Why do you want to work at our company?",
+              "Describe a challenging situation you faced and how you handled it?"
+            ],
+            success: true,
+            error: "No valid tool call found in agent response"
           };
+        } else if (result.status === "failed") {
+          throw new Error(`Execution failed: ${result.error || "Unknown error"}`);
+        }
+      } catch (fetchError: any) {
+        // Handle errors when fetching execution results
+        if (fetchError.status === 422) {
+          console.error("Validation error getting execution:", fetchError.response?.data?.detail || fetchError.message);
+          throw new Error(`Execution fetch failed: ${fetchError.response?.data?.detail?.[0]?.msg || "Validation error"}`);
         }
         
-        return {
-          problemId,
-          problem,
-          behavioralQuestions,
-          success: true
-        };
-      } else if (result.status === "failed") {
-        throw new Error(`Execution failed: ${result.error || "Unknown error"}`);
+        // For other errors, just log and keep trying
+        console.error("Error fetching execution result:", fetchError);
       }
       
       await new Promise((res) => setTimeout(res, 1000));
       attempts++;
-    } while (!["succeeded", "failed"].includes(result.status) && attempts < maxAttempts);
+    } while ((!result || !["succeeded", "failed"].includes(result.status)) && attempts < maxAttempts);
 
     if (attempts >= maxAttempts) {
       throw new Error("Execution timed out");
