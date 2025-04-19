@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react"
 import { Button } from "./ui/button"
 import { Mic, MicOff, Video, VideoOff } from "lucide-react"
+import interviewerVideo from "../assets/interviewer.mp4"
 
 export default function VideoFeeds() {
   const [isMicOn, setIsMicOn] = useState(true)
@@ -79,7 +80,8 @@ export default function VideoFeeds() {
       <div className="flex flex-col">
         <div className="relative bg-gray-700 rounded-md overflow-hidden aspect-video flex items-center justify-center">
           <video
-            src="/placeholder.svg?height=240&width=320"
+            src={interviewerVideo}
+            loop
             className="w-full h-full object-cover"
             autoPlay
             muted
