@@ -9,6 +9,7 @@ interface LiveTranscriptionProps {
 interface AudioRecorderProps {
   getCurrentCode?: () => string;
   getCurrentQuestion?: () => string;
+  onSpeakingChange?: (isSpeaking: boolean) => void;
 }
 
 const LiveTranscription: React.FC<LiveTranscriptionProps> = ({ finalTranscript, interimTranscript }) => {
@@ -39,7 +40,7 @@ const FeedbackDisplay: React.FC<FeedbackDisplayProps> = ({ feedback }) => {
   );
 };
 
-const AudioRecorder: React.FC<AudioRecorderProps> = ({ getCurrentCode, getCurrentQuestion }) => {
+const AudioRecorder: React.FC<AudioRecorderProps> = ({ getCurrentCode, getCurrentQuestion, onSpeakingChange }) => {
   // Speech recognition states
   const [isListening, setIsListening] = useState(false);
   const [finalTranscript, setFinalTranscript] = useState('');
@@ -48,7 +49,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ getCurrentCode, getCurren
   const [sessionId, setSessionId] = useState<string>('');
   const [isHovered, setIsHovered] = useState(false);
   const [feedbackHistory, setFeedbackHistory] = useState<string[]>([]);
-  const [isSpeaking, setIsSpeaking] = useState(false);
+  // const [isSpeaking, setIsSpeaking] = useState(false);
   
   // References
   const recognitionRef = useRef<any>(null);
@@ -100,6 +101,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ getCurrentCode, getCurren
       // Set speaking flag to true
       if (!isSpeakingRef.current) {
         isSpeakingRef.current = true;
+        onSpeakingChange?.(true);
         console.log('Speech detected, recording...');
       }
       
@@ -178,6 +180,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ getCurrentCode, getCurren
       if (isSpeakingRef.current && timeSinceLastSpeech > PAUSE_THRESHOLD) {
         // Pause detected
         isSpeakingRef.current = false;
+        onSpeakingChange?.(false);
         console.log('Pause detected. Processing transcription...');
         
         // Get the current transcript from our ref
@@ -323,19 +326,22 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ getCurrentCode, getCurren
       // Set speaking state to true when synthesis starts
       utterance.onstart = () => {
         console.log('AI started speaking feedback');
-        setIsSpeaking(true);
+        onSpeakingChange?.(true);
+        // setIsSpeaking(true);
       }
       
       // Add event listener for when speech ends
       utterance.onend = () => {
         console.log('AI finished speaking feedback');
-        setIsSpeaking(false);
+        onSpeakingChange?.(false)
+        // setIsSpeaking(false);
       };
       
       // Also handle errors to reset the speaking state
       utterance.onerror = (event) => {
         console.error('Speech synthesis error:', event);
-        setIsSpeaking(false);
+        onSpeakingChange?.(false)
+        // setIsSpeaking(false);
       };
       
       window.speechSynthesis.speak(utterance);

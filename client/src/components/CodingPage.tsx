@@ -19,6 +19,7 @@ const CodingPage = () => {
   const [output, setOutput] = useState("")
   const [isRunning, setIsRunning] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [isSpeaking, setIsSpeaking] = useState(false)
 
   useEffect(() => {
     fetchQuestion()
@@ -158,7 +159,7 @@ const CodingPage = () => {
           </Card>
 
           <Card className="p-4 bg-gray-800 border-gray-700">
-            <VideoFeeds />
+            <VideoFeeds isSpeaking={isSpeaking} />
           </Card>
         </div>
 
@@ -180,7 +181,7 @@ const CodingPage = () => {
         </div>
       </div>
 
-      <AudioRecorder />
+      <AudioRecorder onSpeakingChange={setIsSpeaking} />
 
       <div className="flex justify-end h-[50px] mt-2">
         <Button variant="outline" className="border-red-500 text-red-500 hover:bg-red-900 hover:text-white">
