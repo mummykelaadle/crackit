@@ -5,6 +5,8 @@ import Home from './components/Home';
 import ResumePage from './components/resumePage';
 import BehavioralPage from './components/BehavioralPage';
 import CodingPage from './components/CodingPage';
+import InterviewDetailPage from './components/InterviewDetailPage';
+import InterviewHub from './components/InterviewHub';
 
 const App = () => {
   return (
@@ -15,6 +17,8 @@ const App = () => {
         <Route path="/resume" element={<ResumePage />} />
         <Route path="/coding" element={<CodingPage />} />
         <Route path="/behavioral" element={<BehavioralPage />} />
+        <Route path="interview" element={<InterviewHub />} />
+       
       </Routes>
     </Router>
   );
