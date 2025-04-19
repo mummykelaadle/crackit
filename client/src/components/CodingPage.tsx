@@ -57,8 +57,8 @@ const CodingPage: React.FC<CodingPageProps> = ({ problemId: propProblemId }) => 
         
         // If there are testCases but no examples, generate examples from the first few test cases
         if ((!examples || examples.length === 0) && data.problem.testCases) {
-          const testCasesArray = Object.values(data.problem.testCases)
-          const generatedExamples = testCasesArray.slice(0, 3).map((tc: TestCase) => {
+          const testCasesArray = Object.values(data.problem.testCases) as TestCase[]
+          const generatedExamples = testCasesArray.slice(0, 3).map((tc) => {
             return {
               input: JSON.stringify(tc.input),
               output: JSON.stringify(tc.expectedOutput)
