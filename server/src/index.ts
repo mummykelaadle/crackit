@@ -10,6 +10,7 @@ import apiRoutes from './routes/api';
 import codeEvalRoutes from './routes/evaluator';
 import interviewRoutes from './routes/interview';
 import interviewResumeRoutes from './routes/interviewResume';
+import extractQuestionRoutes from './routes/extractQuestion';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -28,6 +29,7 @@ app.use('/api', apiRoutes);
 app.use('/api/evaluator', codeEvalRoutes);
 app.use('/api/interview', interviewRoutes);
 app.use('/api/interviewResume', interviewResumeRoutes);
+app.use('/api/extractQuestion', extractQuestionRoutes);
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
 });

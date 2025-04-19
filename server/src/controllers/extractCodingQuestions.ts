@@ -1,14 +1,15 @@
 import { Request, Response } from 'express';
-// import { analyzeInterviewExp } from '../utils/interviewAnalyzer';
 import { analyzeInterviewExp } from '../utils/interviewAnalyzerGeminiToCodingQuestions';
 
 /**
- * Controller function that handles analyzing interview experience articles
- * It extracts appropriate coding problems and behavioral questions
+ * Controller for extracting coding questions from interview experience articles
+ * 
+ * @param req Express request object
+ * @param res Express response object
  */
-export const analyzeInterviewController = async (req: Request, res: Response) => {
+export const extractCodingQuestionsController = async (req: Request, res: Response) => {
   try {
-    // Extract the interview experience article and response format from the request body
+    // Extract the interview experience article from the request body
     const { article } = req.body;
 
     // Validate that article is provided
@@ -19,12 +20,12 @@ export const analyzeInterviewController = async (req: Request, res: Response) =>
       });
     }
 
-    // Call the analyzer function with the JSON format option
+    // Call the analyzer function to extract coding questions
     const result = await analyzeInterviewExp(article);
 
     // Return the analysis results
     return res.status(200).json({
-      success: true,
+      success: result.success,
       data: {
         problem: {
           id: result.problemId,
@@ -34,12 +35,12 @@ export const analyzeInterviewController = async (req: Request, res: Response) =>
           tags: result.problem.tags,
           testCases: result.problem.testCases
         },
-        behavioralQuestions: result.behavioralQuestions,
         reasoning: result.reasoning
-      }
+      },
+      error: result.error
     });
   } catch (error) {
-    console.error('Error analyzing interview experience:', error);
+    console.error('Error extracting coding questions:', error);
     
     return res.status(500).json({
       success: false,
