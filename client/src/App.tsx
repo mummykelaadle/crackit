@@ -1,4 +1,4 @@
-import React,{ useState, useEffect } from "react"
+import React,{ useState, useEffect, useRef } from "react"
 import { Button } from "./components/ui/button"
 import { Card } from "./components/ui/card"
 import CodeEditor from "./components/code-editor"
@@ -18,6 +18,22 @@ function App() {
   const [code, setCode] = useState("# Write your code here\n\n")
   const [output, setOutput] = useState("")
   const [isRunning, setIsRunning] = useState(false)
+
+  // Use a ref to access the current code value from other components
+  const codeRef = useRef(code);
+  
+  useEffect(() => {
+    // Update ref whenever code changes
+    codeRef.current = code;
+  }, [code]);
+
+  // Function to get the current code - can be accessed by other components
+  const getCurrentCode = () => codeRef.current;
+  
+  // Function to get the current question - can be accessed by other components
+  const getCurrentQuestion = () => question ? 
+    `${question.title}: ${question.description}` : 
+    'No question loaded';
 
   useEffect(() => {
     // Fetch a coding problem when the component mounts
@@ -145,7 +161,7 @@ function App() {
         </div>
       </div>
 
-      <AudioRecorder />
+      <AudioRecorder getCurrentCode={getCurrentCode} getCurrentQuestion={getCurrentQuestion} />
 
       <div className="flex justify-center h-[50px] mt-2">
         <Button variant="outline" className="border-red-500 text-red-500 hover:bg-red-900 hover:text-white">
