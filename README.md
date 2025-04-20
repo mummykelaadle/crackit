@@ -1,12 +1,30 @@
-# React + Vite
+# 🚀 Crack It – The AI-Powered Mock Interview Platform
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> Your personal AI interviewer, built to simulate real-world interviews with coding, behavioral, and theoretical rounds — all powered by voice interaction and smart feedback.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 👨‍💻 Team Members
 
-## Expanding the ESLint configuration
+- [Desh Deepak Kushwaha](https://github.com/DeshDeepakKushwaha)
+- [Rajat Shukla](https://github.com/RajatX24)
+- [Rituraj Singh](https://github.com/gintoki027)
+- [Sujeet Mahto](https://github.com/mahtosujeet)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## 📽️ Demo Video  
+Watch our platform in action:  
+👉 [YouTube Demo](https://youtu.be/zmrKVshtj5M)
+
+---
+
+## 📊 Presentation  
+Check out the pitch deck we presented at Hack36:  
+👉 [Canva Presentation](https://www.canva.com/design/DAGlJXjaDmg/i0HVeoYtR3exfSH6L6uOOw/view?utm_content=DAGlJXjaDmg&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=ha902d579e0)
+
+---
+
+<p align="center">
+  <img src="https://postimage.me/images/2025/04/19/built-at-hack36.png" alt="Built at Hack36" />
+</p>
