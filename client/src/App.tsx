@@ -6,6 +6,7 @@ import BehavioralPage from './components/BehavioralPage';
 import CodingPage from './components/CodingPage';
 import InterviewDetailPage from './components/InterviewDetailPage';
 import InterviewHub from './components/InterviewHub';
+import SummaryPage from './components/SummaryPage';
 
 const App = () => {
   return (
@@ -17,6 +18,7 @@ const App = () => {
         <Route path="/coding/:id" element={<CodingPage />} />
         <Route path="/behavioral" element={<BehavioralPage />} />
         <Route path="interview" element={<InterviewHub />} />
+        <Route path="/summary" element={<SummaryPage />} />
       </Routes>
     </Router>
   );
