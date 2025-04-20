@@ -1,12 +1,10 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 // 1. TypeScript interface
-interface IUserMessage extends Document {
+interface IUserMessage {
   code?: string;
   transcript?: string;
   improved: boolean; // new field to indicate if message is improved by AI
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 // 2. Mongoose schema

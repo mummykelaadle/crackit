@@ -1,13 +1,13 @@
 import { Request, Response } from "express";
 import { evaluateResumeAndTranscript } from "../utils/evaluateResume";
-import { UserMessage } from "../models/UserMessageModel";
-import { AgentMessage } from "../models/AgentMessageModel";
+import { UserMessage,IUserMessage } from "../models/UserMessageModel";
+import { AgentMessage,IAgentMessage } from "../models/AgentMessageModel";
 import {
   ChatHistory,
   IChatHistory,
   IChatMessage,
 } from "../models/ChatHistoryModel";
-
+import { getImprovedMessageFromTranscriptionAndResume} from "../utils/improvedMessage";
 interface CodeEvaluationRequest {
   sessionId: string;
   transcript: string;
@@ -18,6 +18,7 @@ interface ResumeQuestionRequest {
   resume: string; //as plain text
 }
 
+const sessionIdToChatContext = new Map<string, Array<IUserMessage | IAgentMessage>>();
 const sessionIdToChatHistory = new Map<string, IChatHistory>();
 const sessionIdToResume = new Map<string, string>();
 
@@ -54,6 +55,7 @@ export const resumeEvaluationController = async (
     const { sessionId, transcript } = req.body as CodeEvaluationRequest;
 
     const userMessage = new UserMessage({ transcript });
+    
     let history = sessionIdToChatHistory.get(sessionId);
     if (!history) {
       const newChatHistory = await ChatHistory.create({ messages: [] });
@@ -61,6 +63,15 @@ export const resumeEvaluationController = async (
       sessionIdToChatHistory.set(sessionId, newChatHistory);
       history = newChatHistory;
     }
+
+    let context = sessionIdToChatContext.get(sessionId);
+    if (!context) {
+      context = [];
+      sessionIdToChatContext.set(sessionId, context);
+    }
+
+    context.push(userMessage as IUserMessage);
+
     console.log("History:", history);
     const resume = sessionIdToResume.get(sessionId);
     if (!resume) {
@@ -78,7 +89,7 @@ export const resumeEvaluationController = async (
 
     if (result.success) {
       const agentMessage = new AgentMessage({ content: result.content });
-
+      context.push(agentMessage as IAgentMessage);
       const userChatMessage = {
         type: "user",
         message: userMessage._id,
@@ -93,9 +104,30 @@ export const resumeEvaluationController = async (
         // Save the user and agent messages to the database
         await userMessage.save();
         await agentMessage.save();
+        
+        history?.messages.push(userChatMessage, agentChatMessage);
+        console.log(history?.messages.length);
+        console.log(history?.messages);
+        // Check if the history has more than 4 messages before generating an improved message
+        if((history?.messages.length || 0) > 4){
+        //@ts-ignore
+        const improvedMessage = await getImprovedMessageFromTranscriptionAndResume(resume,transcript,context||[]);                
+        const improvedUserChatMessage = new UserMessage({
+          transcript: improvedMessage.transcript,
+          improved: true, // Mark as improved by AI
+        });
 
+        context?.push(improvedUserChatMessage as IUserMessage);
+
+        const userChatMessageImprovedByAi = {
+          type: "user",
+          message: improvedUserChatMessage._id,
+        } as IChatMessage;
+
+        
         // Add both messages to the chat history
-        history?.messages.push(userChatMessage, agentChatMessage);    
+        history?.messages.push(userChatMessageImprovedByAi);
+      }
         // Update the chat history in the database
         try {
           await history?.save();
