@@ -2,8 +2,8 @@ import { Request, Response } from "express";
 import { evaluateCodeAndTranscript } from "../utils/evaluateCode";
 import { getImprovedMessageFromCodeAndTranscription  } from "../utils/improvedMessage";
 import { transcribeAudio } from "../utils/audioTranscription";
-import { UserMessage } from "../models/UserMessageModel";
-import { AgentMessage } from "../models/AgentMessageModel";
+import { IUserMessage, UserMessage } from "../models/UserMessageModel";
+import { AgentMessage, IAgentMessage } from "../models/AgentMessageModel";
 import {
   ChatHistory,
   IChatHistory,
@@ -23,6 +23,7 @@ interface EvaluationResult {
 }
 
 const sessionIdToChatHistory = new Map<string, IChatHistory>();
+const sessionIdToChatContext = new Map<string, Array<IUserMessage | IAgentMessage>>();
 
 export const codeEvaluationController = async (
   req: Request,
@@ -40,9 +41,15 @@ export const codeEvaluationController = async (
       sessionIdToChatHistory.set(sessionId, newChatHistory);
       history = newChatHistory;
     }
-    if (history.messages.length === 0) {
-      sessionIdToChatHistory.set(sessionId, history);
+    
+    let context = sessionIdToChatContext.get(sessionId);
+    if (!context) {
+      context = [];
+      sessionIdToChatContext.set(sessionId, context);
     }
+    
+    // Add user message to context
+    context.push(userMessage as IUserMessage);
 
     const result: EvaluationResult = await evaluateCodeAndTranscript(
       question,
@@ -53,6 +60,9 @@ export const codeEvaluationController = async (
 
     if (result.success) {
       const agentMessage = new AgentMessage({ content: result.content });
+      // Add agent message to context
+      context.push(agentMessage as IAgentMessage);
+      
       // Create chat message objects with references to the actual messages
       const userChatMessage = {
         type: "user",
@@ -67,8 +77,34 @@ export const codeEvaluationController = async (
         // Save the user and agent messages to the database
         await userMessage.save();
         await agentMessage.save();
-        history?.messages.push(userChatMessage, agentChatMessage);
-        history?.save(); // Save the updated chat history
+        const improvedMessage = await getImprovedMessageFromCodeAndTranscription(question, code, transcript, context||[]);
+        
+        const improvedUserChatMessage = new UserMessage({
+          transcript: improvedMessage.content,
+          improved: true, // Mark as improved by AI
+        });
+        
+        // Add improved message to context
+        context?.push(improvedUserChatMessage as IUserMessage);
+        
+        const userChatMessageImprovedByAi = {
+          type: "user",
+          message: improvedUserChatMessage._id,
+        } as IChatMessage;
+
+        history?.messages.push(userChatMessage, agentChatMessage, userChatMessageImprovedByAi); // Add messages to the chat history
+        
+        try {
+          await history?.save(); // Save the updated chat history
+          console.log("Successfully saved chat history");
+        } catch (error) {
+          console.error("Error saving chat history:", error);
+        }
+        
+        // Update the context in the map
+        if (context) {
+          sessionIdToChatContext.set(sessionId, context);
+        }
       }
 
       postSendingTasks();

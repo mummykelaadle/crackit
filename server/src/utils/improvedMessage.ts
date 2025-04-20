@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import yaml from "yaml";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { z } from "zod";
+import { IUserMessage } from "../models/UserMessageModel";
 
 dotenv.config();
 
@@ -157,7 +158,7 @@ export async function getImprovedMessageFromTranscriptionAndResume(
   resume: string,
   transcript: string,
   chatHistory: any[]
-): Promise<{success:boolean,content:string} | null> {
+): Promise<IUserMessage> {
 try {
     const improvedMessage = await generateImprovedMessage(
         resume,
@@ -168,20 +169,23 @@ try {
     if (improvedMessage) {
         return {
             success: true,
-            content: improvedMessage
-        };
+            content: improvedMessage,
+            improved: true, 
+        }as IUserMessage;
     } else {
         console.warn("Could not generate an improved follow-up message.");
         return {
             success: false,
-            content: "Failed to generate an improved message"
-        };
+            content: "Failed to generate an improved message",
+            improved: true, 
+        }as IUserMessage;
     }
 } catch (error) {
     console.error("Error during improved message generation:", error);
     return {
         success: false,
-        content: error instanceof Error ? error.message : "Unknown error occurred"
-    };
+        content: error instanceof Error ? error.message : "Unknown error occurred",
+        improved: true,
+    }as IUserMessage;
 }
 }
