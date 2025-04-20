@@ -10,6 +10,8 @@ interface AudioRecorderProps {
   getCurrentCode?: () => string;
   getCurrentQuestion?: () => string;
   onSpeakingChange?: (isSpeaking: boolean) => void;
+  onTranscriptChange?: (transcript: string, isFinal: boolean) => void;
+  disableSpeechSynthesis?: boolean;
 }
 
 const LiveTranscription: React.FC<LiveTranscriptionProps> = ({ finalTranscript, interimTranscript }) => {
@@ -40,7 +42,7 @@ const FeedbackDisplay: React.FC<FeedbackDisplayProps> = ({ feedback }) => {
   );
 };
 
-const AudioRecorder: React.FC<AudioRecorderProps> = ({ getCurrentCode, getCurrentQuestion, onSpeakingChange }) => {
+const AudioRecorder: React.FC<AudioRecorderProps> = ({ getCurrentCode, getCurrentQuestion, onSpeakingChange, onTranscriptChange, disableSpeechSynthesis }) => {
   // Speech recognition states
   const [isListening, setIsListening] = useState(false);
   const [finalTranscript, setFinalTranscript] = useState('');
@@ -118,6 +120,9 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ getCurrentCode, getCurren
           
           // Also update the state for display purposes
           setFinalTranscript(currentTranscriptRef.current);
+          
+          // Call the onTranscriptChange callback if provided
+          onTranscriptChange?.(currentTranscriptRef.current, true);
         } else {
           // For interim results, just display them
           currentInterimTranscript += transcript;
@@ -125,6 +130,11 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ getCurrentCode, getCurren
       }
       
       setInterimTranscript(currentInterimTranscript);
+      
+      // Also call the callback for interim results if provided
+      if (currentInterimTranscript) {
+        onTranscriptChange?.(currentInterimTranscript, false);
+      }
     };
     
     recognition.onerror = (event: any) => {
@@ -190,6 +200,9 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ getCurrentCode, getCurren
         if (transcriptToSend) {
           console.log(`Sending transcript on pause: "${transcriptToSend.substring(0, 50)}${transcriptToSend.length > 50 ? '...' : ''}"`);
           sendTranscriptionToServer(transcriptToSend);
+          
+          // Call the onTranscriptChange callback to notify about final transcript
+          onTranscriptChange?.(transcriptToSend, true);
           
           // Reset the current transcript ref after sending
           currentTranscriptRef.current = '';
@@ -317,7 +330,7 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ getCurrentCode, getCurren
 
   // Add Web Speech Synthesis to read feedback automatically
   useEffect(() => {
-    if (feedback) {
+    if (feedback && !disableSpeechSynthesis) {
       const utterance = new SpeechSynthesisUtterance(feedback);
       utterance.lang = 'en-US';
       utterance.rate = 1; // Adjust the rate if needed

@@ -227,7 +227,12 @@ const CodingPage: React.FC<CodingPageProps> = ({ problemId: propProblemId }) => 
         </div>
       </div>
 
-      <AudioRecorder onSpeakingChange={setIsSpeaking} />
+      <AudioRecorder 
+        onSpeakingChange={setIsSpeaking} 
+        getCurrentCode={() => code}
+        getCurrentQuestion={() => question ? JSON.stringify(question) : ""}
+        disableSpeechSynthesis={false}
+      />
 
       <div className="flex justify-end h-[50px] mt-2">
         <Button variant="outline" className="border-red-500 text-red-500 hover:bg-red-900 hover:text-white">
